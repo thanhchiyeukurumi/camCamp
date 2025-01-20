@@ -22,7 +22,7 @@ camCamp is a web application inspired by Yelp, allowing users to discover, revie
 1. **Clone the repository**:
     ```sh
     git clone https://github.com/thanhchiyeukurumi/camCamp.git
-    cd yelpcamp
+    cd camCamp
     ```
 
 2. **Install dependencies**:
