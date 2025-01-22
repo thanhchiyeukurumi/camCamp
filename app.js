@@ -14,57 +14,50 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local')
 const mongoSanitize = require('express-mongo-sanitize');
 const helmet = require('helmet');
-
-// Import model
+const ExpressError = require('./utils/ExpressError');
 const User = require('./models/user');
-// Import routes
-const campgroundsRoute = require('./routes/campgrounds');
-const reviewsRoute = require('./routes/reviews');
-const usersRoute = require('./routes/users');
 
-// connect to mongodb : can change dburl to dburlxx if you want to use local db
-const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp'
-
-// Test connection
+// const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp'
+const dbUrl = 'mongodb://localhost:27017/yelp-camp'
 mongoose.connect(dbUrl);
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', () => {console.log('Database mongo atlas connected');});
+db.once('open', () => {console.log('Database mongo atlas connected!!');});
 
 const app = express();
 
 // set view engine
 app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, 'views')); // folder views has all the ejs files
 
-// Middleware
-const ExpressError = require('./utils/ExpressError');
+
+
 const { name } = require('ejs');
 app.use(express.urlencoded({ extended: true })); 
-app.use(methodOverride('_method')); 
+app.use(methodOverride('_method')); // override with POST having ?_method=DELETE or ?_method=PUT
 app.use(express.static(path.join(__dirname, 'public'))); 
-app.use(mongoSanitize({
-    replaceWith: '_'
-})); 
+app.use(mongoSanitize({replaceWith: '_'}));  // NoSQL injection protection
 
-// session 
+// using mongo to store session
 const secret = process.env.SECRET || 'hhhhjjdjdjdjdjdsecret!';
 const store = MongoStore.create({
     mongoUrl: dbUrl,
-    touchAfter: 24 * 60 * 60,
-    secret,
+    touchAfter: 24 * 60 * 60, // 1 day
+    secret, 
 });
 
+// error handling althought it is not necessary
 store.on('error', function (e) {
     console.log('Session Store Error', e)
 })
+
 const sessionConfig = {
     store, 
     name: 'session', 
     secret,
     resave: false, 
-    saveUninitialized: true, 
+    saveUninitialized: true, // save session even if it is not initialized
     cookie: {
         httpOnly: true, 
         //secure: true, 
@@ -72,12 +65,9 @@ const sessionConfig = {
         maxAge: 1000 * 60 * 60 * 24 * 7, 
     }
 }
-
 app.use(session(sessionConfig));
-app.use(flash()); 
+
 app.use(helmet());
-
-
 const scriptSrcUrls = [
     "https://stackpath.bootstrapcdn.com/",
     "https://kit.fontawesome.com/",
@@ -100,7 +90,7 @@ const fontSrcUrls = [];
 app.use(
     helmet.contentSecurityPolicy({
         directives: {
-            defaultSrc: [],
+            defaultSrc: [], // zenzen no default source
             connectSrc: ["'self'", ...connectSrcUrls],
             scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
             styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
@@ -120,19 +110,25 @@ app.use(
     })
 );
 
+// passport middleware
 app.use(passport.initialize()); 
 app.use(passport.session()); 
 passport.use(new LocalStrategy(User.authenticate())); 
 passport.serializeUser(User.serializeUser()); 
 passport.deserializeUser(User.deserializeUser()); 
  
-
+app.use(flash()); 
 app.use((req, res, next) => {
-    res.locals.currentUser = req.user; 
+    res.locals.currentUser = req.user; // null if not logged in
     res.locals.success = req.flash('success');
     res.locals.error = req.flash('error');
     next();
 });
+
+// Import routes
+const campgroundsRoute = require('./routes/campgrounds');
+const reviewsRoute = require('./routes/reviews');
+const usersRoute = require('./routes/users');
 
 // using route
 app.use('/campgrounds', campgroundsRoute);
@@ -156,8 +152,8 @@ app.use((err, req, res, next) => {
     res.status(statusCode).render('error.ejs', { err });
 });
 
-const port = process.env.PORT || 3000;
-// listen
+const defaultPort = 3830;
+const port = process.env.PORT || defaultPort; // why having env.PORT here?
 app.listen(port, () => {
-    console.log('Listening on port 3000');
+    console.log(`Listening on port ${defaultPort}`);
 });

@@ -1,3 +1,4 @@
+// No need to run this file, just for seeding data to mongodb when start the project
 const mongoose = require('mongoose');
 const cities = require('./cities');
 const Campground = require('../models/campground');

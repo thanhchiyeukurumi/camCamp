@@ -8,7 +8,7 @@ module.exports.isLoggedIn = (req, res, next) => {
     if (!req.isAuthenticated()) {
         req.session.returnTo = req.originalUrl; // don't think this work
         req.flash('error', 'You must be signed in');
-        return res.redirect('/login');
+        return res.redirect('/login'); //nah
     }
     next();
 }
@@ -57,7 +57,7 @@ module.exports.vaidateReview = (req, res, next) => {
     }
 }
 
-// store return to url (idk if this is necessary or can be used)
+// store return to url (idk if this is necessary or can be used) -> update: this don't work anymore
 module.exports.storeReturnTo = (req, res, next) => {
     if (req.session.returnTo) {
         res.locals.returnTo = req.session.returnTo;
