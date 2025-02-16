@@ -1,7 +1,3 @@
-if (process.env.NODE_ENV !== 'production') {
-    require('dotenv').config();
-}
-require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
@@ -13,34 +9,33 @@ const flash = require('connect-flash');
 const passport = require('passport');
 const LocalStrategy = require('passport-local')
 const mongoSanitize = require('express-mongo-sanitize');
-const helmet = require('helmet');
 const ExpressError = require('./utils/ExpressError');
 const User = require('./models/user');
-
+require('dotenv').config();
 // const dbUrl = process.env.DB_URL || 'mongodb://localhost:27017/yelp-camp'
 const dbUrl = 'mongodb://localhost:27017/yelp-camp'
 mongoose.connect(dbUrl);
 const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'connection error:'));
-db.once('open', () => {console.log('Database mongo atlas connected!!');});
+db
+    .on('error', console.error.bind(console, 'connection error:'))
+    .once('open', () => {console.log('Database mongo atlas connected!!');});
 
 const app = express();
 
 // set view engine
 app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views')); // folder views has all the ejs files
+app.set('views', path.join(__dirname, 'views')); 
 
 
 
-const { name } = require('ejs');
+// const { name } = require('ejs');
 app.use(express.urlencoded({ extended: true })); 
 app.use(methodOverride('_method')); // override with POST having ?_method=DELETE or ?_method=PUT
 app.use(express.static(path.join(__dirname, 'public'))); 
 app.use(mongoSanitize({replaceWith: '_'}));  // NoSQL injection protection
 
-// using mongo to store session
-const secret = process.env.SECRET || 'hhhhjjdjdjdjdjdsecret!';
+const secret = process.env.SECRET 
 const store = MongoStore.create({
     mongoUrl: dbUrl,
     touchAfter: 24 * 60 * 60, // 1 day
@@ -66,49 +61,6 @@ const sessionConfig = {
     }
 }
 app.use(session(sessionConfig));
-
-app.use(helmet());
-const scriptSrcUrls = [
-    "https://stackpath.bootstrapcdn.com/",
-    "https://kit.fontawesome.com/",
-    "https://cdnjs.cloudflare.com/",
-    "https://cdn.jsdelivr.net",
-    "https://cdn.maptiler.com/", 
-];
-const styleSrcUrls = [
-    "https://kit-free.fontawesome.com/",
-    "https://stackpath.bootstrapcdn.com/",
-    "https://fonts.googleapis.com/",
-    "https://use.fontawesome.com/",
-    "https://cdn.jsdelivr.net",
-    "https://cdn.maptiler.com/", 
-];
-const connectSrcUrls = [
-    "https://api.maptiler.com/", 
-];
-const fontSrcUrls = [];
-app.use(
-    helmet.contentSecurityPolicy({
-        directives: {
-            defaultSrc: [], // zenzen no default source
-            connectSrc: ["'self'", ...connectSrcUrls],
-            scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
-            styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
-            workerSrc: ["'self'", "blob:"],
-            objectSrc: [],
-            imgSrc: [
-                "'self'",
-                "blob:",
-                "data:",
-                "https://res.cloudinary.com/dsimlypyu/", 
-                "https://images.unsplash.com/",
-                "https://api.maptiler.com/",
-                "https://nrs.objectstore.gov.bc.ca"
-            ],
-            fontSrc: ["'self'", ...fontSrcUrls],
-        },
-    })
-);
 
 // passport middleware
 app.use(passport.initialize()); 
@@ -153,7 +105,6 @@ app.use((err, req, res, next) => {
 });
 
 const defaultPort = 3830;
-const port = process.env.PORT || defaultPort; // why having env.PORT here?
-app.listen(port, () => {
+app.listen(defaultPort, () => {
     console.log(`Listening on port ${defaultPort}`);
 });
